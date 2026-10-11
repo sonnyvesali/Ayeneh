@@ -6,27 +6,24 @@
 //
 
 import SwiftUI
-import SwiftData
 
 @main
 struct ayenehApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+    @StateObject private var history = WorkspaceHistoryStore()
+    @StateObject private var reviewTemplates: ReviewTemplateStore
+    @StateObject private var clips: ClipStore
 
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    init() {
+        let templates = ReviewTemplateStore()
+        _reviewTemplates = StateObject(wrappedValue: templates)
+        _clips = StateObject(wrappedValue: ClipStore(profileID: templates.profileID))
+    }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            VideoWorkspace(history: history, reviewTemplates: reviewTemplates, clips: clips)
         }
-        .modelContainer(sharedModelContainer)
+        .defaultSize(width: 1100, height: 760)
+        .commands { PlaybackCommands() }
     }
 }
